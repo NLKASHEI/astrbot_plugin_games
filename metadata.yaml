@@ -1,5 +1,5 @@
 name: astrbot_plugin_games
-desc: 棱镜娘小游戏合集，塔罗牌占卜+打工赚币+二十一点。
+desc: 棱镜娘小游戏合集 v1.2 — 塔罗牌占卜(人格注入)+打工(动态Bot名)+二十一点(动态货币)+WebUI配置。
 author: NLKASHEI
-version: 1.1.0
+version: 1.2.0
 repo: https://github.com/NLKASHEI/astrbot_plugin_games

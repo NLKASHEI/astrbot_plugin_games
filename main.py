@@ -96,7 +96,8 @@ def format_card(card: dict, position: str = "") -> str:
     return f"{pos}{card['name']} ({card['name_en']}) {arrow}\n  {arcana}\n  牌意: {meaning}"
 
 
-def _tarot_prompt(question: str, cards: list) -> str:
+def _tarot_prompt(question: str, cards: list, persona: str = "", bot_name: str = "") -> str:
+    """注入 Bot 人格的塔罗解读提示词"""
     ct = ""
     positions = ["过去", "现在", "未来"]
     for i, card in enumerate(cards):
@@ -105,9 +106,20 @@ def _tarot_prompt(question: str, cards: list) -> str:
         arrow = "正位" if up else "逆位"
         meaning = card["meaning_up"] if up else card["meaning_rev"]
         ct += f"第{i+1}张（{pos}）: {card['name']}({card['name_en']}) {arrow}\n  含义: {meaning}\n\n"
-    return f"""你是资深塔罗占卜师。用户问题：「{question}」
 
-{ct}请结合位置、正逆位和问题，给一段温暖有洞察力的解读（150字内）。直接输出，不要前缀。"""
+    persona_section = persona if persona else f"你是{bot_name}，也是一个擅长塔罗占卜的AI助手。"
+
+    return f"""{persona_section}
+
+现在你要为一位朋友进行塔罗牌占卜。
+
+用户的问题：「{question}」
+
+抽到的三张牌：
+{ct}
+请以你的角色身份和语气，结合牌的位置（过去/现在/未来）、正逆位含义和用户的问题，给一段温暖、有洞察力的个性化解读（150字以内）。
+
+直接输出解读内容，不要任何前缀或后缀。"""
 
 
 def _gen_spread_img(cards: list) -> io.BytesIO:
@@ -152,21 +164,23 @@ def _wrap(text: str, n: int) -> list:
 
 # ==================== 打工 ====================
 
-WORK_EVENTS = [
-    {"text": "你在棱镜娘的虚拟咖啡厅当了一天的服务生。", "min": 20, "max": 50},
-    {"text": "你帮棱镜娘整理了数据库，眼睛都快瞎了。", "min": 30, "max": 60},
-    {"text": "你在棱镜广场发了一天传单，虚拟猫都绕着你走。", "min": 10, "max": 40},
-    {"text": "你给棱镜娘的花园浇水，不小心浇多了...", "min": 5, "max": 20},
-    {"text": "你在棱镜镇工地搬了一天虚拟砖头。", "min": 25, "max": 55},
-    {"text": "你在棱镜图书馆发现了一本神秘的书。", "min": 30, "max": 70},
-    {"text": "棱镜娘的服务器宕机了，你帮忙重启了八十次。", "min": 40, "max": 80},
-    {"text": "你在棱镜餐馆洗了一天碗，手都皱了。", "min": 15, "max": 35},
-    {"text": "你照顾棱镜娘的虚拟宠物，被咬了三口。", "min": 10, "max": 30},
-    {"text": "你帮棱镜娘修了一段代码，她开心地发了加班费！", "min": 50, "max": 100},
-    {"text": "你在棱镜广场表演街头魔术，观众给了不少打赏！", "min": 30, "max": 65},
-    {"text": "你在棱镜快递站送了一整天包裹。", "min": 20, "max": 45},
-    {"text": "棱镜娘有个特殊任务——测试新功能！Bug多但报酬不错。", "min": 35, "max": 75},
-]
+def _build_work_events(bot_name: str) -> list:
+    """动态生成打工事件（使用实际 Bot 名称）"""
+    return [
+        {"text": f"你在{bot_name}的虚拟咖啡厅当了一天的服务生，端了无数杯虚拟咖啡。", "min": 20, "max": 50},
+        {"text": f"你帮{bot_name}整理了数据库，索引建了一大堆，眼睛都快瞎了。", "min": 30, "max": 60},
+        {"text": f"你在{bot_name}广场发了一天传单，虚拟猫都绕着你走。", "min": 10, "max": 40},
+        {"text": f"你给{bot_name}的花园浇水，不小心浇多了...花盆里变成了小池塘。", "min": 5, "max": 20},
+        {"text": f"你在{bot_name}镇工地搬了一天虚拟砖头，胳膊酸得抬不起来。", "min": 25, "max": 55},
+        {"text": f"你在{bot_name}图书馆角落发现了一本积灰的神秘古书，翻了几页似乎有金光闪过。", "min": 30, "max": 70},
+        {"text": f"{bot_name}的服务器又宕机了！你帮忙重启了八十次，终于恢复了。", "min": 40, "max": 80},
+        {"text": f"你在{bot_name}餐馆洗了一天碗，手都皱了，但后厨的香气让你觉得值了。", "min": 15, "max": 35},
+        {"text": f"你照顾{bot_name}的虚拟宠物，被那只傲娇的电子猫咬了三口。", "min": 10, "max": 30},
+        {"text": f"你帮{bot_name}修了一段棘手的Bug代码，她开心得给你发了加班费！", "min": 50, "max": 100},
+        {"text": f"你在{bot_name}广场表演街头魔术，围观群众纷纷掏出虚拟钱包打赏！", "min": 30, "max": 65},
+        {"text": f"你在{bot_name}快递站送了一整天包裹，风雨无阻，好评率100%。", "min": 20, "max": 45},
+        {"text": f"{bot_name}有个特殊任务——测试新功能！Bug多得吓人但报酬不错...", "min": 35, "max": 75},
+    ]
 
 WORK_DB = os.path.join(DATA_DIR, "work.db")
 
@@ -219,8 +233,35 @@ def _hand_str(cards, hide=False):
 # ==================== 插件主体 ====================
 
 class GamesPlugin(Star):
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, config: AstrBotConfig = None):
         super().__init__(context)
+        cfg = config or {}
+        self.max_bet = int(cfg.get("max_bet", 500))
+
+    # ==================== 辅助方法 ====================
+
+    async def _get_persona(self, event: AstrMessageEvent) -> tuple[str, str]:
+        """读取 AstrBot 人格管理器"""
+        try:
+            pm = self.context.persona_manager
+            persona = await pm.get_default_persona_v3(umo=event.unified_msg_origin)
+            if persona:
+                return persona.get("name", "棱镜娘"), persona.get("prompt", "")
+        except Exception:
+            pass
+        return "棱镜娘", ""
+
+    def _get_currency_name(self) -> str:
+        """从 economy 插件配置读取货币名"""
+        try:
+            eco_conf = os.path.join(os.path.dirname(os.path.dirname(__file__)), "astrbot_plugin_economy", "_conf_schema.json")
+            if os.path.exists(eco_conf):
+                with open(eco_conf, "r", encoding="utf-8") as f:
+                    schema = json.load(f)
+                    return schema.get("currency_name", {}).get("default", "棱镜币")
+        except Exception:
+            pass
+        return "棱镜币"
 
     # ---------- 塔罗牌 ----------
 
@@ -256,14 +297,16 @@ class GamesPlugin(Star):
         for i, c in enumerate(cards):
             lines.append(format_card(c, ["过去", "现在", "未来"][i]))
         yield event.plain_result("\n".join(lines))
+        bot_name, persona_prompt = await self._get_persona(event)
+
         try:
-            prompt = _tarot_prompt(question, cards)
+            prompt = _tarot_prompt(question, cards, persona_prompt, bot_name)
             umo = event.unified_msg_origin
             pid = await self.context.get_current_chat_provider_id(umo=umo)
             if pid:
                 resp = await self.context.llm_generate(chat_provider_id=pid, prompt=prompt)
                 if resp and resp.completion_text:
-                    yield event.plain_result(f" 解读:\n{resp.completion_text.strip()}")
+                    yield event.plain_result(f"## 💬 {bot_name}的解读\n\n{resp.completion_text.strip()}")
                     return
         except Exception as e:
             logger.error(f"[Games] AI解读失败: {e}")
@@ -271,28 +314,46 @@ class GamesPlugin(Star):
 
     @filter.command("塔罗单抽")
     async def cmd_single(self, event: AstrMessageEvent):
+        uname = event.get_sender_name()
         card = draw_cards(1)[0]
-        yield event.plain_result(f"  {event.get_sender_name()} 抽到了:\n{format_card(card)}")
+        yield event.plain_result(f"## 🃏 {uname} 抽到了:\n\n{format_card(card)}")
 
     # ---------- 打工 ----------
 
     @filter.command("打工")
     async def cmd_work(self, event: AstrMessageEvent):
         uid = event.get_sender_id()
+        uname = event.get_sender_name() or "你"
         if not _can_work(uid):
-            yield event.plain_result("你今天已经打过工啦！明天再来吧～")
+            yield event.plain_result("你今天已经打过工啦！明天再来吧～  ")
             return
-        ev = random.choice(WORK_EVENTS)
+
+        bot_name, _ = await self._get_persona(event)
+        currency = self._get_currency_name()
+        events = _build_work_events(bot_name)
+        ev = random.choice(events)
         coins = random.randint(ev["min"], ev["max"])
         _record_work(uid)
         _add_coins(uid, coins, "打工收入")
-        yield event.plain_result(f" 打工完成！\n{ev['text']}\n\n获得 **{coins}** 棱镜币")
+        bal = _get_balance(uid)
+
+        yield event.plain_result(
+            f"## 🏢 {uname} 打工完成！\n\n"
+            f"{ev['text']}\n\n"
+            f"💰 获得 **{coins}** {currency}（余额: {bal}）\n"
+            f"*明天再来赚更多吧～*"
+        )
 
     # ---------- 二十一点 ----------
 
     @filter.command("二十一点")
     async def cmd_bj(self, event: AstrMessageEvent, bet: int = 0):
         uid = event.get_sender_id()
+        currency = self._get_currency_name()
+
+        if bet > self.max_bet:
+            yield event.plain_result(f"单次下注不能超过 **{self.max_bet}** {currency}哦～")
+            return
         if uid in _bj_games:
             g = _bj_games[uid]
             yield event.plain_result(
@@ -300,20 +361,21 @@ class GamesPlugin(Star):
                 f"庄家明牌: {_hand_str(g['d'], True)}\n发送 /要牌 或 /停牌")
             return
         if bet > 0 and not _charge_coins(uid, bet, "21点下注"):
-            yield event.plain_result("棱镜币不够下注哦～")
+            yield event.plain_result(f"{currency}不够下注哦～  ")
             return
         deck = _new_deck()
         _bj_games[uid] = {"deck": deck, "p": [deck.pop(), deck.pop()], "d": [deck.pop(), deck.pop()], "bet": bet}
         g = _bj_games[uid]
         yield event.plain_result(
-            f"  二十一点！\n你的手牌: {_hand_str(g['p'])} (点数: {_hand_val(g['p'])})\n"
+            f"##  二十一点！\n\n你的手牌: {_hand_str(g['p'])} (点数: {_hand_val(g['p'])})\n"
             f"庄家明牌: {_hand_str(g['d'], True)}\n" +
-            (f"下注: {bet} 棱镜币\n" if bet else "") +
-            f"\n发送 /要牌 或 /停牌")
+            (f"下注: **{bet}** {currency}\n" if bet else "") +
+            f"\n发送 **/要牌** 或 **/停牌**")
 
     @filter.command("要牌")
     async def cmd_hit(self, event: AstrMessageEvent):
         uid = event.get_sender_id()
+        currency = self._get_currency_name()
         if uid not in _bj_games:
             yield event.plain_result("还没有进行中的游戏，先 /二十一点 开始吧！")
             return
@@ -322,16 +384,17 @@ class GamesPlugin(Star):
         pv = _hand_val(g["p"])
         if pv > 21:
             del _bj_games[uid]
-            yield event.plain_result(f"你抽到了 {_hand_str(g['p'])} (点数: {pv})\n**爆牌了！** 你输了！" + (f" 失去了 {g['bet']} 棱镜币" if g["bet"] else ""))
+            yield event.plain_result(f"抽到 {_hand_str(g['p'])} (点数: **{pv}**)\n\n## 💥 爆牌了！你输了！" + (f" 失去了 {g['bet']} {currency}" if g["bet"] else ""))
         elif pv == 21:
             del _bj_games[uid]; dv = _hand_val(g["d"])
-            yield event.plain_result(f"**21点！**\n庄家: {_hand_str(g['d'])} (点数: {dv})\n{_bj_result(pv, dv, g['bet'], uid)}")
+            yield event.plain_result(f"## 🎉 **21点！**\n\n庄家: {_hand_str(g['d'])} (点数: {dv})\n{_bj_result(pv, dv, g['bet'], uid, currency)}")
         else:
-            yield event.plain_result(f"抽到 {g['p'][-1][0]}{g['p'][-1][1]}\n当前: {_hand_str(g['p'])} (点数: {pv})\n/要牌 继续 /停牌 停止")
+            yield event.plain_result(f"抽到 {g['p'][-1][0]}{g['p'][-1][1]}\n当前: {_hand_str(g['p'])} (点数: **{pv}**)\n/要牌 继续 /停牌 停止")
 
     @filter.command("停牌")
     async def cmd_stand(self, event: AstrMessageEvent):
         uid = event.get_sender_id()
+        currency = self._get_currency_name()
         if uid not in _bj_games:
             yield event.plain_result("还没有进行中的游戏！")
             return
@@ -339,19 +402,20 @@ class GamesPlugin(Star):
         while _hand_val(g["d"]) < 17: g["d"].append(g["deck"].pop())
         pv, dv = _hand_val(g["p"]), _hand_val(g["d"])
         yield event.plain_result(
-            f"你停牌了！\n你的手牌: {_hand_str(g['p'])} (点数: {pv})\n庄家: {_hand_str(g['d'])} (点数: {dv})\n{_bj_result(pv, dv, g['bet'], uid)}")
+            f"你停牌了！\n\n你的手牌: {_hand_str(g['p'])} (点数: **{pv}**)\n"
+            f"庄家: {_hand_str(g['d'])} (点数: **{dv}**)\n\n{_bj_result(pv, dv, g['bet'], uid, currency)}")
 
     async def terminate(self):
         logger.info("[Games] 插件已卸载")
 
 
-def _bj_result(pv, dv, bet, uid):
+def _bj_result(pv, dv, bet, uid, currency: str = "棱镜币"):
     if dv > 21 or pv > dv:
         w = bet * 2
         if bet: _add_coins(uid, w, "21点获胜")
-        return f"**你赢了！**🎉" + (f" 获得 {w} 棱镜币！" if bet else "")
+        return f"## 🎉 你赢了！" + (f" 获得 **{w}** {currency}！" if bet else "")
     elif pv < dv:
-        return f"**庄家赢了！**😢" + (f" 失去了 {bet} 棱镜币" if bet else "")
+        return f"## 😢 庄家赢了！" + (f" 失去了 **{bet}** {currency}" if bet else "")
     else:
         if bet: _add_coins(uid, bet, "21点平局返还")
-        return f"**平局！**" + (f" 下注已退还" if bet else "")
+        return f"## 🤝 平局！" + (f" 下注已退还" if bet else "")
