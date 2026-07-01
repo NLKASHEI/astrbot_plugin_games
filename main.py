@@ -224,7 +224,7 @@ class GamesPlugin(Star):
 
     # ---------- 塔罗牌 ----------
 
-    @filter.llm_tool(name="塔罗占卜")
+    @filter.llm_tool(name="tarot_reading")
     async def tarot_tool(self, event: AstrMessageEvent, question: str = "整体运势") -> str:
         """为用户进行塔罗牌占卜。Args: question(string): 用户想占卜的问题"""
         cards = draw_cards(3)
