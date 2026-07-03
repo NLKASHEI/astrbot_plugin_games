@@ -283,8 +283,8 @@ class GamesPlugin(Star):
         yield event.plain_result(f"🃏 塔罗占卜\n{ct}")
 
     @filter.command("占卜")
-    async def cmd_tarot(self, event: AstrMessageEvent, question: str = ""):
-        if not question.strip():
+    async def cmd_tarot(self, event: AstrMessageEvent, 问题: str = ""):
+        if not 问题.strip():
             yield event.plain_result("你想问什么呀？\n例如: /占卜 我今天的运势怎么样？")
             return
         uname = event.get_sender_name()
@@ -300,7 +300,7 @@ class GamesPlugin(Star):
         bot_name, persona_prompt = await self._get_persona(event)
 
         try:
-            prompt = _tarot_prompt(question, cards, persona_prompt, bot_name)
+            prompt = _tarot_prompt(问题, cards, persona_prompt, bot_name)
             umo = event.unified_msg_origin
             pid = await self.context.get_current_chat_provider_id(umo=umo)
             if pid:
@@ -347,19 +347,22 @@ class GamesPlugin(Star):
     # ---------- 二十一点 ----------
 
     @filter.command("二十一点")
-    async def cmd_bj(self, event: AstrMessageEvent, bet: int = 0):
+    async def cmd_bj(self, event: AstrMessageEvent, 下注金额: int = 0):
         uid = event.get_sender_id()
         currency = self._get_currency_name()
 
-        if bet > self.max_bet:
+        if 下注金额 > self.max_bet:
             yield event.plain_result(f"单次下注不能超过 **{self.max_bet}** {currency}哦～")
             return
+
         if uid in _bj_games:
             g = _bj_games[uid]
             yield event.plain_result(
                 f"你还有一局进行中！\n你的手牌: {_hand_str(g['p'])} (点数: {_hand_val(g['p'])})\n"
                 f"庄家明牌: {_hand_str(g['d'], True)}\n发送 /要牌 或 /停牌")
             return
+
+        bet = 下注金额
         if bet > 0 and not _charge_coins(uid, bet, "21点下注"):
             yield event.plain_result(f"{currency}不够下注哦～  ")
             return
