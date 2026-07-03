@@ -254,6 +254,14 @@ class GamesPlugin(Star):
             pass
         return "棱镜娘", ""
 
+    async def _send_ephemeral(self, event, content):
+        """Discord 斜杠命令私密回复；True=已发送 False=需调用方 yield"""
+        wh = getattr(event, 'interaction_followup_webhook', None)
+        if wh:
+            await wh.send(content, ephemeral=True)
+            return True
+        return False
+
     def _get_currency_name(self) -> str:
         """从 economy 插件配置读取货币名"""
         try:
@@ -331,7 +339,8 @@ class GamesPlugin(Star):
         uid = event.get_sender_id()
         uname = event.get_sender_name() or "你"
         if not _can_work(uid):
-            yield event.plain_result("你今天已经打过工啦！明天再来吧～  ")
+            if not await self._send_ephemeral(event, "你今天已经打过工啦！明天再来吧～  "):
+                yield event.plain_result("你今天已经打过工啦！明天再来吧～  ")
             return
 
         bot_name, _ = await self._get_persona(event)
@@ -343,12 +352,14 @@ class GamesPlugin(Star):
         _add_coins(uid, coins, "打工收入")
         bal = _get_balance(uid)
 
-        yield event.plain_result(
+        content = (
             f"## 🏢 {uname} 打工完成！\n\n"
             f"{ev['text']}\n\n"
             f"💰 获得 **{coins}** {currency}（余额: {bal}）\n"
             f"*明天再来赚更多吧～*"
         )
+        if not await self._send_ephemeral(event, content):
+            yield event.plain_result(content)
 
     # ---------- 二十一点 ----------
 
