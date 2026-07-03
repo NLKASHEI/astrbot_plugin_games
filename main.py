@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star
-from astrbot.api import logger
+from astrbot.api import logger, AstrBotConfig
 
 BEIJING_TZ = timezone(timedelta(hours=8))
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
