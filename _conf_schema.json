@@ -1,0 +1,8 @@
+{
+  "max_bet": {
+    "description": "21点最大下注",
+    "type": "int",
+    "default": 500,
+    "hint": "二十一点单次下注上限"
+  }
+}
