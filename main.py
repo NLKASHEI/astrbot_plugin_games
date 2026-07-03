@@ -244,12 +244,12 @@ class GamesPlugin(Star):
     # ==================== 辅助方法 ====================
 
     async def _get_persona(self, event: AstrMessageEvent) -> tuple[str, str]:
-        """读取 AstrBot 人格管理器"""
+        """读取 AstrBot 人格提示词（名字锁死为棱镜娘）"""
         try:
             pm = self.context.persona_manager
             persona = await pm.get_default_persona_v3(umo=event.unified_msg_origin)
             if persona:
-                return persona.get("name", "棱镜娘"), persona.get("prompt", "")
+                return "棱镜娘", persona.get("prompt", "")
         except Exception:
             pass
         return "棱镜娘", ""
