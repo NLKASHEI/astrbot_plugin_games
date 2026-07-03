@@ -14,8 +14,6 @@ import random
 import sqlite3
 from datetime import datetime, timezone, timedelta
 
-from PIL import Image, ImageDraw, ImageFont
-
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star
 from astrbot.api import logger, AstrBotConfig
@@ -123,6 +121,11 @@ def _tarot_prompt(question: str, cards: list, persona: str = "", bot_name: str =
 
 
 def _gen_spread_img(cards: list) -> io.BytesIO:
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        logger.error("[Games] Pillow 未安装，无法生成牌阵图。请 pip install Pillow")
+        raise
     w, h = 900, 400
     cw, pad = 260, 30
     bg = (30, 30, 40)
