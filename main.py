@@ -282,10 +282,11 @@ class GamesPlugin(Star):
             ct += f"{['过去','现在','未来'][i]}: {c['name']}({arrow}) - {meaning}\n"
         yield event.plain_result(f"🃏 塔罗占卜\n{ct}")
 
-    @filter.command("占卜")
+    @filter.command("tarot", alias={"占卜"})
     async def cmd_tarot(self, event: AstrMessageEvent, 问题: str = ""):
+        """塔罗牌占卜——问一个问题，抽三张牌给你解读"""
         if not 问题.strip():
-            yield event.plain_result("你想问什么呀？\n例如: /占卜 我今天的运势怎么样？")
+            yield event.plain_result("你想问什么呀？\n例如: /tarot 我今天的运势怎么样？")
             return
         uname = event.get_sender_name()
         cards = draw_cards(3)
@@ -312,16 +313,18 @@ class GamesPlugin(Star):
             logger.error(f"[Games] AI解读失败: {e}")
         yield event.plain_result("（AI 解读暂时不可用）")
 
-    @filter.command("塔罗单抽")
+    @filter.command("tarot_single", alias={"塔罗单抽"})
     async def cmd_single(self, event: AstrMessageEvent):
+        """塔罗单抽——随机抽一张牌看看"""
         uname = event.get_sender_name()
         card = draw_cards(1)[0]
         yield event.plain_result(f"## 🃏 {uname} 抽到了:\n\n{format_card(card)}")
 
     # ---------- 打工 ----------
 
-    @filter.command("打工")
+    @filter.command("work", alias={"打工"})
     async def cmd_work(self, event: AstrMessageEvent):
+        """每日打工——随机趣味事件，赚取棱镜币"""
         uid = event.get_sender_id()
         uname = event.get_sender_name() or "你"
         if not _can_work(uid):
@@ -346,8 +349,9 @@ class GamesPlugin(Star):
 
     # ---------- 二十一点 ----------
 
-    @filter.command("二十一点")
+    @filter.command("blackjack", alias={"二十一点"})
     async def cmd_bj(self, event: AstrMessageEvent, 下注金额: int = 0):
+        """二十一点——经典扑克游戏，支持下注"""
         uid = event.get_sender_id()
         currency = self._get_currency_name()
 
@@ -359,7 +363,7 @@ class GamesPlugin(Star):
             g = _bj_games[uid]
             yield event.plain_result(
                 f"你还有一局进行中！\n你的手牌: {_hand_str(g['p'])} (点数: {_hand_val(g['p'])})\n"
-                f"庄家明牌: {_hand_str(g['d'], True)}\n发送 /要牌 或 /停牌")
+                f"庄家明牌: {_hand_str(g['d'], True)}\n发送 /hit 或 /stand")
             return
 
         bet = 下注金额
@@ -373,14 +377,15 @@ class GamesPlugin(Star):
             f"##  二十一点！\n\n你的手牌: {_hand_str(g['p'])} (点数: {_hand_val(g['p'])})\n"
             f"庄家明牌: {_hand_str(g['d'], True)}\n" +
             (f"下注: **{bet}** {currency}\n" if bet else "") +
-            f"\n发送 **/要牌** 或 **/停牌**")
+            f"\n发送 **/hit** 或 **/stand**")
 
-    @filter.command("要牌")
+    @filter.command("hit", alias={"要牌"})
     async def cmd_hit(self, event: AstrMessageEvent):
+        """二十一点：再要一张牌"""
         uid = event.get_sender_id()
         currency = self._get_currency_name()
         if uid not in _bj_games:
-            yield event.plain_result("还没有进行中的游戏，先 /二十一点 开始吧！")
+            yield event.plain_result("还没有进行中的游戏，先 /blackjack 开始吧！")
             return
         g = _bj_games[uid]
         g["p"].append(g["deck"].pop())
@@ -392,10 +397,11 @@ class GamesPlugin(Star):
             del _bj_games[uid]; dv = _hand_val(g["d"])
             yield event.plain_result(f"## 🎉 **21点！**\n\n庄家: {_hand_str(g['d'])} (点数: {dv})\n{_bj_result(pv, dv, g['bet'], uid, currency)}")
         else:
-            yield event.plain_result(f"抽到 {g['p'][-1][0]}{g['p'][-1][1]}\n当前: {_hand_str(g['p'])} (点数: **{pv}**)\n/要牌 继续 /停牌 停止")
+            yield event.plain_result(f"抽到 {g['p'][-1][0]}{g['p'][-1][1]}\n当前: {_hand_str(g['p'])} (点数: **{pv}**)\n/hit 继续 /stand 停止")
 
-    @filter.command("停牌")
+    @filter.command("stand", alias={"停牌"})
     async def cmd_stand(self, event: AstrMessageEvent):
+        """二十一点：停止要牌，与庄家比大小"""
         uid = event.get_sender_id()
         currency = self._get_currency_name()
         if uid not in _bj_games:
