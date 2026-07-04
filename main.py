@@ -31,6 +31,17 @@ def _eco_conn():
         return None
     conn = sqlite3.connect(_ECONOMY_DB)
     conn.row_factory = sqlite3.Row
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS coins (
+            user_id TEXT PRIMARY KEY, balance INTEGER DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT, amount INTEGER, reason TEXT,
+            created_at TEXT DEFAULT (datetime('now','localtime'))
+        );
+    """)
+    conn.commit()
     return conn
 
 
